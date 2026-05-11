@@ -1,0 +1,37 @@
+{
+  "mel": {
+    "name": "Melanoma",
+    "description": "A malignant tumor of melanocytes. The most dangerous form of skin cancer, capable of spreading to other organs if not detected early.",
+    "urgency_message": "Immediate dermatologist consultation is strongly recommended. Do not delay."
+  },
+  "bcc": {
+    "name": "Basal Cell Carcinoma",
+    "description": "The most common form of skin cancer. Arises from basal cells in the deepest layer of the epidermis. Rarely metastasizes but can be locally destructive if untreated.",
+    "urgency_message": "Schedule a dermatologist appointment as soon as possible for evaluation and treatment."
+  },
+  "akiec": {
+    "name": "Actinic Keratoses",
+    "description": "A rough, scaly patch caused by years of sun exposure. Considered a precancerous lesion with potential to progress to squamous cell carcinoma.",
+    "urgency_message": "Consult a dermatologist. Early treatment prevents progression to invasive carcinoma."
+  },
+  "bkl": {
+    "name": "Benign Keratosis",
+    "description": "A non-cancerous skin growth including seborrheic keratoses, solar lentigines, and lichen planus-like keratoses. Generally harmless but should be monitored.",
+    "urgency_message": "Likely benign, but a routine dermatology check is recommended to confirm."
+  },
+  "df": {
+    "name": "Dermatofibroma",
+    "description": "A common benign fibrous nodule usually found on the legs. Caused by a minor injury or insect bite. Very rarely associated with malignancy.",
+    "urgency_message": "Generally benign. Consult a dermatologist if the lesion changes in size, color, or shape."
+  },
+  "nv": {
+    "name": "Melanocytic Nevi",
+    "description": "Commonly known as moles. Benign proliferations of melanocytes. Most are harmless, but atypical nevi may carry a slightly elevated risk of melanoma.",
+    "urgency_message": "Monitor regularly for changes. Consult a dermatologist if any change in size, border, or color is observed."
+  },
+  "vasc": {
+    "name": "Vascular Lesion",
+    "description": "Includes cherry angiomas, angiokeratomas, and pyogenic granulomas. Arises from blood vessels in the skin. Typically benign.",
+    "urgency_message": "Usually benign. A dermatologist visit is recommended to rule out rare vascular malignancies."
+  }
+}
