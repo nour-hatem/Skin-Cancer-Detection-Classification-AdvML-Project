@@ -277,7 +277,7 @@ Both services run as isolated containers on an internal network. Only the api co
 
 End-to-end walkthrough: starting the containers, uploading a test image, receiving a prediction, and verifying the health endpoint.
 
-![Live Demo GIF](https://github.com/nour-hatem/tempadvml/blob/main/Demo/live-demo.gif?raw=true)
+![Live Demo GIF](https://github.com/nour-hatem/Skin-Cancer-Detection-Classification-AdvML-Project/blob/main/Demo/live-demo.gif?raw=true)
 
 ---
 
