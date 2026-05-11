@@ -9,6 +9,9 @@ Early skin cancer screening tool built on the HAM10000 dataset. Classifies derma
 | Metric | Value |
 |---|---|
 | Model | EfficientNetV2-S (transfer learning) |
+| Model size | 81 MB |
+| Epochs | 25|
+| Batch size | 32 |
 | Test Accuracy | 83.1% |
 | Melanoma Recall (threshold=0.35) | 86.4% |
 | Melanoma AUC-ROC | 0.921 |
