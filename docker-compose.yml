@@ -1,0 +1,48 @@
+version: "3.9"
+
+networks:
+  skin_net:
+    driver: bridge
+
+services:
+
+  classifier:
+    build: ./services/classifier
+    container_name: skin_classifier
+    expose:
+      - "8001"
+    networks:
+      - skin_net
+    volumes:
+      - ./skin_cancer_model.pth:/app/skin_cancer_model.pth:ro
+    env_file: .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  api:
+    build: ./services/api
+    container_name: skin_api
+    ports:
+      - "8000:8000"
+    networks:
+      - skin_net
+    volumes:
+      - ./logs:/app/logs
+    env_file: .env
+    depends_on:
+      classifier:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
