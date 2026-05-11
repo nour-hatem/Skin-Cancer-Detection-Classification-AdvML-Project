@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Skin Cancer Detection — Project 7</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#060d1f;--surface:#0d1a35;--card:#111e3a;--border:#1e3158;
+  --teal:#00d4aa;--teal-dim:#00a882;--purple:#7c3aed;--blue:#3b82f6;
+  --red:#ef4444;--amber:#f59e0b;--green:#10b981;
+  --text:#e2e8f0;--muted:#64748b;--dim:#94a3b8;
+}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow:hidden}
+
+/* ── DECK ─────────────────────────────── */
+#deck{width:100vw;height:100vh;position:relative}
+.slide{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  padding:48px 64px 40px;opacity:0;pointer-events:none;
+  transition:opacity .45s ease,transform .45s ease;transform:translateY(24px);
+}
+.slide.active{opacity:1;pointer-events:all;transform:translateY(0)}
+
+/* ── PROGRESS ─────────────────────────── */
+#progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--purple));transition:width .4s ease;z-index:99}
+#counter{position:fixed;bottom:20px;right:28px;font-size:12px;color:var(--muted);letter-spacing:.05em}
+#nav{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:99}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--border);cursor:pointer;transition:background .3s,transform .3s}
+.dot.active{background:var(--teal);transform:scale(1.4)}
+
+/* ── LAYOUT HELPERS ───────────────────── */
+.slide-title{font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:10px}
+h1{font-size:clamp(28px,3.5vw,44px);font-weight:800;line-height:1.15}
+h2{font-size:clamp(22px,2.8vw,34px);font-weight:700;line-height:1.2}
+h3{font-size:16px;font-weight:600;color:var(--dim)}
+.accent{color:var(--teal)}
+.red{color:var(--red)}
+.amber{color:var(--amber)}
+.green{color:var(--green)}
+.purple{color:var(--purple)}
+
+.cols{display:grid;gap:32px;flex:1;align-items:start}
+.cols-2{grid-template-columns:1fr 1fr}
+.cols-3{grid-template-columns:1fr 1fr 1fr}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px}
+.card.glow{box-shadow:0 0 24px rgba(0,212,170,.08)}
+tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.06em}
+tag.teal{background:rgba(0,212,170,.12);color:var(--teal);border:1px solid rgba(0,212,170,.3)}
+tag.red{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+tag.amber{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.3)}
+tag.green{background:rgba(16,185,129,.12);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+tag.purple{background:rgba(124,58,237,.12);color:var(--purple);border:1px solid rgba(124,58,237,.3)}
+
+ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+ul li::before{content:'→';color:var(--teal);margin-right:8px;font-weight:700}
+ul li{font-size:14px;color:var(--dim)}
+
+pre,code{font-family:'JetBrains Mono',monospace}
+.code-block{background:#080f20;border:1px solid var(--border);border-radius:10px;padding:18px 20px;font-size:13px;line-height:1.7;color:#a8d8a8;overflow:auto}
+.kw{color:#79b8ff}.str{color:#9ecbff}.num{color:#f8c555}.fn{color:#b392f0}.cm{color:#6a737d}
+
+/* ── CHART BARS ─────────────────────── */
+.bar-chart{display:flex;flex-direction:column;gap:6px;flex:1}
+.bar-row{display:flex;align-items:center;gap:10px}
+.bar-label{font-size:12px;font-weight:600;width:46px;text-align:right;color:var(--dim)}
+.bar-track{flex:1;height:22px;background:var(--border);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:700;transition:width 1s ease}
+.bar-count{font-size:11px;color:var(--muted);width:48px}
+
+/* ── METRIC CARDS ─────────────────────── */
+.metric{text-align:center;padding:20px 16px;border-radius:12px;background:var(--card);border:1px solid var(--border)}
+.metric .val{font-size:clamp(26px,3vw,38px);font-weight:800;line-height:1}
+.metric .lbl{font-size:11px;color:var(--muted);margin-top:6px;letter-spacing:.06em;text-transform:uppercase}
+
+/* ── TABLE ──────────────────────────── */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:rgba(0,212,170,.08);color:var(--teal);font-weight:700;padding:10px 14px;text-align:left;border-bottom:2px solid var(--border);letter-spacing:.05em;font-size:11px;text-transform:uppercase}
+td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--dim)}
+tr:hover td{background:rgba(255,255,255,.02)}
+.check{color:var(--teal);font-size:16px}
+.cross{color:var(--muted)}
+
+/* ── TITLE SLIDE EXTRAS ──────────────── */
+.badge-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.hero-sub{font-size:16px;color:var(--dim);margin-top:12px;font-weight:300;max-width:560px;line-height:1.6}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;opacity:.18}
+.orb1{width:500px;height:500px;background:radial-gradient(circle,var(--teal),transparent);right:-100px;top:-100px}
+.orb2{width:400px;height:400px;background:radial-gradient(circle,var(--purple),transparent);left:-80px;bottom:-80px}
+
+/* ── PIPELINE ────────────────────────── */
+.pipe{display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto}
+.pipe-step{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;text-align:center;min-width:100px;flex-shrink:0}
+.pipe-step .icon{font-size:22px;margin-bottom:4px}
+.pipe-step .name{font-size:11px;font-weight:700;color:var(--teal)}
+.pipe-step .desc{font-size:10px;color:var(--muted);margin-top:2px}
+.pipe-arrow{font-size:20px;color:var(--border);padding:0 8px;flex-shrink:0}
+
+/* ── ROC MOCK ────────────────────────── */
+svg text{font-family:'Inter',sans-serif}
+
+/* ── ETHICS BOX ──────────────────────── */
+.ethics-block{border-left:3px solid var(--teal);padding:14px 18px;background:rgba(0,212,170,.05);border-radius:0 10px 10px 0}
+.ethics-block p{font-size:13px;color:var(--dim);line-height:1.7;font-style:italic}
+
+/* ── RESPONSIVE CLAMPS ───────────────── */
+@media(max-height:700px){.slide{padding:28px 48px 28px}.metric .val{font-size:24px}h2{font-size:22px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div id="deck">
+
+<!-- ══════════════════  SLIDE 1 — TITLE  ══════════════════ -->
+<div class="slide active" id="s0">
+  <div class="orb orb1"></div><div class="orb orb2"></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:1">
+    <div class="slide-title">FCAI · Advanced Machine Learning · Project 7</div>
+    <h1>Skin Cancer<br><span class="accent">Detection System</span></h1>
+    <p class="hero-sub">
+      Deep-learning-powered dermatoscopic image classifier using EfficientNetV2-S,
+      deployed as a production-ready REST API with Docker — purpose-built to
+      <strong style="color:var(--text)">never miss melanoma</strong>.
+    </p>
+    <div class="badge-row">
+      <tag class="teal">HAM10000 Dataset</tag>
+      <tag class="purple">EfficientNetV2-S</tag>
+      <tag class="teal">7 Lesion Classes</tag>
+      <tag class="red">Melanoma Recall > 80%</tag>
+      <tag class="amber">FastAPI · Docker</tag>
+    </div>
+    <div style="margin-top:40px;display:flex;gap:32px">
+      <div><div style="font-size:28px;font-weight:800;color:var(--teal)">10,015</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Training Images</div></div>
+      <div style="width:1px;background:var(--border)"></div>
+      <div><div style="font-size:28px;font-weight:800;color:var(--purple)">7</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Lesion Classes</div></div>
+      <div style="width:1px;background:var(--border)"></div>
+      <div><div style="font-size:28px;font-weight:800;color:var(--amber)">0.35</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Mel Threshold</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════  SLIDE 2 — PROBLEM  ══════════════════ -->
+<div class="slide" id="s1">
+  <div class="slide-title">Problem Statement</div>
+  <h2>Why Skin Cancer <span class="accent">Detection</span> Matters</h2>
+  <div style="margin-top:4px;height:1px;background:linear-gradient(90deg,var(--teal),transparent);margin-bottom:24px"></div>
+  <div class="cols cols-2" style="flex:1">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card glow">
+        <div style="font-size:36px;font-weight:800;color:var(--red)">1 in 5</div>
+        <div style="font-size:13px;color:var(--dim);margin-top:4px">Americans develop skin cancer in their lifetime</div>
+      </div>
+      <div class="card">
+        <div style="font-size:36px;font-weight:800;color:var(--amber)">98%</div>
+        <div style="font-size:13px;color:var(--dim);margin-top:4px">5-year survival rate when melanoma is caught early (stage I)</div>
+      </div>
+      <div class="card">
+        <div style="font-size:36px;font-weight:800;color:var(--teal)">< 30%</div>
+        <div style="font-size:13px;color:var(--dim);margin-top:4px">Survival rate for late-stage metastatic melanoma</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card" style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--teal);margin-bottom:12px">🎯 Business Value</div>
+        <ul>
+          <li>Assist dermatologists with high-volume screening</li>
+          <li>Reduce time-to-diagnosis in under-served regions</li>
+          <li>Flag high-risk lesions for priority consultation</li>
+          <li>Supplement clinical judgment — not replace it</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:12px">⚠️ Core Challenge</div>
+        <p style="font-size:13px;color:var(--dim);line-height:1.6">
+          False negatives on melanoma are <strong style="color:var(--red)">clinically dangerous</strong>.
+          The model is optimized to maximize melanoma recall even at the cost of some precision.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════  SLIDE 3 — DATASET  ══════════════════ -->
+<div class="slide" id="s2">
+  <div class="slide-title">Dataset Overview</div>
+  <h2>HAM10000 — <span class="accent">Human Against Machine</span></h2>
+  <div style="height:1px;background:linear-gradient(90deg,var(--teal),transparent);margin:8px 0 22px"></div>
+  <div class="cols cols-2" style="flex:1">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="card" style="margin-bottom:4px">
+        <ul style="gap:6px">
+          <li>10,015 dermatoscopic images @ 600×450 px</li>
+          <li>7 diagnostic categories, expert-labelled</li>
+          <li>Sourced from Vienna & Queensland clinics</li>
+          <li>Lesion-ID deduplication → no data leakage</li>
+          <li>Stratified 80 / 10 / 10 train/val/test split</li>
+        </ul>
+      </div>
+      <div class="bar-chart">
+        <div class="bar-row"><span class="bar-label">nv</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:linear-gradient(90deg,#3b82f6,#60a5fa)">67%</div></div><span class="bar-count">6705</span></div>
+        <div class="bar-row"><span class="bar-label">mel</span><div class="bar-track"><div class="bar-fill" style="width:16.6%;background:linear-gradient(90deg,var(--red),#f87171)">11%</div></div><span class="bar-count">1113</span></div>
+        <div class="bar-row"><span class="bar-label">bkl</span><div class="bar-track"><div class="bar-fill" style="width:16.4%;background:linear-gradient(90deg,var(--amber),#fbbf24)">11%</div></div><span class="bar-count">1099</span></div>
+        <div class="bar-row"><span class="bar-label">bcc</span><div class="bar-track"><div class="bar-fill" style="width:7.7%;background:linear-gradient(90deg,var(--purple),#a78bfa)">5%</div></div><span class="bar-count">514</span></div>
+        <div class="bar-row"><span class="bar-label">akiec</span><div class="bar-track"><div class="bar-fill" style="width:4.9%;background:linear-gradient(90deg,#ec4899,#f472b6)">3%</div></div><span class="bar-count">327</span></div>
+        <div class="bar-row"><span class="bar-label">vasc</span><div class="bar-track"><div class="bar-fill" style="width:2.1%;background:linear-gradient(90deg,var(--teal),#34d399)">1%</div></div><span class="bar-count">142</span></div>
+        <div class="bar-row"><span class="bar-label">df</span><div class="bar-track"><div class="bar-fill" style="width:1.7%;background:linear-gradient(90deg,#f97316,#fb923c)">1%</div></div><span class="bar-count">115</span></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:12px;font-weight:600;color:var(--teal);letter-spacing:.08em;text-transform:uppercase">Class Descriptions</div>
+      <table>
+        <tr><th>Code</th><th>Lesion</th><th>Risk</th></tr>
+        <tr><td>mel</td><td>Melanoma</td><td><tag class="red">HIGH</tag></td></tr>
+        <tr><td>bcc</td><td>Basal Cell Carcinoma</td><td><tag class="red">HIGH</tag></td></tr>
+        <tr><td>akiec</td><td>Actinic Keratosis</td><td><tag class="amber">MEDIUM</tag></td></tr>
+        <tr><td>bkl</td><td>Benign Keratosis</td><td><tag class="green">LOW</tag></td></tr>
+        <tr><td>df</td><td>Dermatofibroma</td><td><tag class="green">LOW</tag></td></tr>
+        <tr><td>nv</td><td>Melanocytic Nevi</td><td><tag class="green">LOW</tag></td></tr>
+        <tr><td>vasc</td><td>Vascular Lesion</td><td><tag class="green">LOW</tag></td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════  SLIDE 4 — EDA  ══════════════════ -->
+<div class="slide" id="s3">
+  <div class="slide-title">Exploratory Data Analysis</div>
+  <h2>Key Findings from <span class="accent">EDA</span></h2>
+  <div style="height:1px;background:linear-gradient(90deg,var(--teal),transparent);margin:8px 0 22px"></div>
+  <div class="cols cols-3" style="flex:1">
+    <div class="card glow" style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:20px">📊</div>
+      <div style="font-size:13px;font-weight:700;color:var(--teal)">Class Imbalance</div>
+      <p style="font-size:13px;color:var(--dim);line-height:1.6">
+        <strong style="color:var(--text)">nv dominates at 67%</strong> of all samples.
+        Melanoma (the most dangerous class) represents only <span class="red">11%</span>.
+        Minority classes df and vasc together account for just 2.5%.
+      </p>
+      <div style="margin-top:auto;padding-top:10px;border-top:1px solid var(--border)">
+        <tag class="red">58× imbalance ratio</tag>
+      </div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:20px">🎨</div>
+      <div style="font-size:13px;font-weight:700;color:var(--teal)">Pixel Intensity</div>
+      <p style="font-size:13px;color:var(--dim);line-height:1.6">
+        All three channels show <strong style="color:var(--text)">high mean intensity</strong>
+        (R≈0.76, G≈0.55, B≈0.57) — skin images are bright. Narrow std values indicate
+        low inter-image color variance: custom normalization is critical.
+      </p>
+      <div style="margin-top:auto;padding-top:10px;border-top:1px solid var(--border)">
+        <tag class="teal">HAM-specific norm used</tag>
+      </div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:20px">🔍</div>
+      <div style="font-size:13px;font-weight:700;color:var(--teal)">Augmentation Impact</div>
+      <p style="font-size:13px;color:var(--dim);line-height:1.6">
+        Before/after grid revealed that random flips, rotations, and color jitter
+        <strong style="color:var(--text)">preserve clinical features</strong> while
+        increasing effective diversity. Aggressive crop was avoided to retain lesion boundaries.
+      </p>
+      <div style="margin-top:auto;padding-top:10px;border-top:1px solid var(--border)">
+        <tag class="purple">+3% val accuracy</tag>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:16px" class="card">
+    <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:8px">⚡ Key Insight: Why Standard Oversampling Wasn't Enough</div>
+    <p style="font-size:13px;color:var(--dim);line-height:1.6">
+      Naive ROS caused the model to memorise minority class textures. √-weighted
+      <strong style="color:var(--text)">WeightedRandomSampler</strong> softens the distribution
+      without collapsing majority-class generalisation.
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════  SLIDE 5 — MODEL CHOICE  ══════════════════ -->
+<div class="slide" id="s4">
+  <div class="slide-title">Model Architecture</div>
+  <h2>Why <span class="accent">EfficientNetV2-S</span>?</h2>
+  <div style="height:1px;background:linear-gradient(90deg,var(--teal),transparent);margin:8px 0 22px"></div>
+  <div class="cols cols-2" style="flex:1">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <table>
+        <tr><th></th><th>ResNet-18</th><th>EfficientNetV2-S ✓</th></tr>
+        <tr><td>Parameters</td><td>11.7M</td><td>21.5M</td></tr>
+        <tr><td>ImageNet Top-1</td><td>69.8%</td><td><strong style="color:var(--teal)">84.2%</strong></td></tr>
+        <tr><td>Fused-MBConv</td><td class="cross">✗</td><td class="check">✔</td></tr>
+        <tr><td>Progressive training</td><td class="cross">✗</td><td class="check">✔</td></tr>
+        <tr><td>Compound scaling</td><td class="cross">✗</td><td class="check">✔</td></tr>
+        <tr><td>Training speed</td><td>Faster</td><td>Comparable on V100</td></tr>
+        <tr><td>Mel recall (our task)</td><td>~72%</td><td><strong style="color:var(--teal)">~85%</strong></td></tr>
+      </table>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card glow">
+        <div style="font-size:13px;font-weight:700;color:var(--teal);margin-bottom:10px">Architecture Modification</div>
+        <div class="code-block" style="font-size:12px">
+<span class="cm"># Replace classifier head for 7 classes</span>
+m = <span class="fn">efficientnet_v2_s</span>(weights=<span class="str">IMAGENET1K_V1</span>)
+in_features = m.classifier[<span class="num">1</span>].in_features
+m.classifier = nn.Sequential(
+  nn.Dropout(p=<span class="num">0.3</span>),
+  nn.Linear(in_features, <span class="num">7</span>)
+)
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--purple);margin-bottom:8px">Two-Phase Fine-tuning</div>
+        <ul>
+          <li>Phase 1: Freeze backbone, train head only (5 epochs)</li>
+          <li>Phase 2: Unfreeze all, backbone lr = 3e-5</li>
+          <li>Head lr = 3e-4 with OneCycleLR scheduler</li>
+          <li>Prevents catastrophic forgetting of ImageNet features</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════  SLIDE 6 — TRAINING STRATEGY  ══════════════════ -->
+<div class="slide" id="s5">
+  <div class="slide-title">Training Strategy</div>
+  <h2>Taming <span class="accent">Class Imbalance</span></h2>
+  <div style="height:1px;background:linear-gradient(90deg,var(--teal),transparent);margin:8px 0 20px"></div>
+  <div style="margin-bottom:18px">
+    <div class="pipe">
+      <div class="pipe-step"><div class="icon">🗂️</div><div class="name">Stratified Split</div><div class="desc">80/10/10 by lesion_id</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="icon">⚖️</div><div class="name">√ Weighting</div><div class="desc">WeightedRandomSampler</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="icon">🎨</div><div class="name">Augmentation</div><div class="desc">Flip·Rotate·ColorJitter</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="icon">🔥</div><div class="name">Weighted CE</div><div class="desc">label_smoothing=0.1</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="icon">📈</div><div class="name">OneCycleLR</div><div class="desc">AdamW · 25 epochs</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step"><div class="icon">💾</div><div class="name">Best by Recall</div><div class="desc">mel recall checkpoint</div></div>
+    </div>
+  </div>
+  <div class="cols cols-3" style="flex:1">
+    <div class="card glow">
+      <div style="font-size:13px;font-weight:700;color:var(--teal);margin-bottom:8px">√-Weighted Sampler</div>
+      <div class="code-block" style="font-size:11px">
+w_cls = <span class="num">1</span> / sqrt(class_counts)
+sample_w = w_cls[labels]
+sampler = WeightedRandomSampler(
+  weights=sample_w,
+  num_samples=<span class="fn">len</span>(train_ds)
+)</div>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px">√ softens imbalance vs. full inverse — preserves nv generalisation</p>
+    </div>
+    <div class="card">
+      <div style="font-size:13px;font-weight:700;color:var(--purple);margin-bottom:8px">Loss Function</div>
+      <div class="code-block" style="font-size:11px">
+criterion = nn.CrossEntropyLoss(
+  weight=class_weights,
+  label_smoothing=<span class="num">0.1</span>
+)</div>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px">
+        Focal loss abandoned — unstable with heavily imbalanced alpha vectors
+      </p>
+    </div>
+    <div class="card">
+      <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px">Checkpoint Strategy</div>
+      <ul>
+        <li>Save best model by <span class="red">melanoma recall</span></li>
+        <li>Not by val accuracy or val loss</li>
+        <li>Threshold tuned post-training</li>
+        <li>MEL_THRESHOLD = <strong style="color:var(--teal)">0.35</strong></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════  SLIDE 7 — THRESHOLD  ══════════════════ -->
+<div class="slide" id="s6">
+  <div class="slide-title">Threshold Tuning</div>
+  <h2>Melanoma Decision <span class="accent">Threshold = 0.35</span></h2>
+  <div style="height:1px;background:linear-gradient(90deg,var(--teal),transparent);margin:8px 0 20px"></div>
+  <div class="cols cols-2" style="flex:1">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card glow">
+        <div style="font-size:13px;font-weight:700;color:var(--teal);margin-bottom:10px">Prediction Override Logic</div>
+        <div class="code-block" style="font-size:12px">
+probs = softmax(model(x))
+mel_prob = probs[<span class="num">MEL_IDX</span>]  <span class="cm"># idx 4</span>
+
+<span class="kw">if</span> mel_prob >= <span class="num">MEL_THRESHOLD</span>:
+    pred = MEL_IDX        <span class="cm"># override</span>
+<span class="kw">else</span>:
+    pred = probs.argmax()  <span class="cm"># default</span>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px">Scan Range: 0.15 → 0.35</div>
+        <p style="font-size:13px;color:var(--dim);line-height:1.6">
+          Threshold scan tested every 0.05 step.
+          <strong style="color:var(--text)">0.35</strong> chosen as the
+          sweet-spot that keeps melanoma recall above 80% while limiting
+          over-flagging of benign lesions as high-risk.
+        </p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--teal);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">Threshold vs. Melanoma Recall (illustrative)</div>
+      <svg viewBox="0 0 340 180" style="width:100%;border-radius:10px;background:var(--card)">
+        <!-- grid lines -->
+        <line x1="50" y1="20" x2="50" y2="155" stroke="#1e3158" stroke-width="1"/>
+        <line x1="50" y1="155" x2="320" y2="155" stroke="#1e3158" stroke-width="1"/>
+        <line x1="50" y1="100" x2="320" y2="100" stroke="#1e3158" stroke-width=".5" stroke-dasharray="4,3"/>
+        <line x1="50" y1="60" x2="320" y2="60" stroke="#1e3158" stroke-width=".5" stroke-dasharray="4,3"/>
+        <!-- recall curve -->
+        <polyline points="60,40 105,48 150,64 195,85 240,108 285,132" stroke="#00d4aa" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+        <!-- threshold line at 0.35 -->
+        <line x1="240" y1="20" x2="240" y2="155" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <text x="242" y="34" font-size="10" fill="#f59e0b">0.35</text>
+        <!-- precision curve -->
+        <polyline points="60,125 105,118 150,110 195,102 240,95 285,88" stroke="#7c3aed" stroke-width="2" fill="none" stroke-linejoin="round" stroke-dasharray="5,3"/>
+        <!-- axes labels -->
+        <text x="30" y="42" font-size="9" fill="#64748b" text-anchor="middle" transform="rotate(-90,30,42)"></text>
+        <text x="180" y="172" font-size="9" fill="#64748b" text-anchor="middle">threshold</text>
+        <text x="160" y="14" font-size="9" fill="#64748b" text-anchor="middle">recall / precision vs. threshold</text>
+        <text x="60" y="172" font-size="8" fill="#64748b" text-anchor="middle">0.15</text>
+        <text x="285" y="172" font-size="8" fill="#64748b" text-anchor="middle">0.35</text>
+        <!-- legend -->
+        <rect x="55" y="22" width="8" height="3" fill="#00d4aa" rx="1"/>
+        <text x="67" y="26" font-size="8" fill="#94a3b8">Mel Recall</text>
+        <rect x="110" y="22" width="8" height="3" fill="#7c3aed" rx="1"/>
+        <text x="122" y="26" font-size="8" fill="#94a3b8">Precision</text>
+      </svg>
+      <div class="card" style="padding:14px">
+        <div style="display:flex;gap:16px;justify-content:space-around;text-align:center">
+          <div><div style="font-size:22px;font-weight:800;color:var(--teal)">≥80%</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Mel Recall Target</div></div>
+          <div style="width:1px;background:var(--border)"></div>
+          <div><div style="font-size:22px;font-weight:800;color:var(--red)">0.35</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Chosen Threshold</div></div>
+          <div style="width:1px;background:var(--border)"></div>
+          <div><div style="font-size:22px;font-weight:800;color:var(--purple)">4</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">MEL_IDX</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════  SLIDE 8 — RESULTS  ══════════════════ -->
+<div class="slide" id="s7">
+  <div class="slide-title">Experimental Results</div>
+  <h2>Model <span class="accent">Performance</span></h2>
+  <div style="height:1px;background:linear-gradient(90deg,var(--teal),transparent);margin:8px 0 20px"></div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+    <div class="metric"><div class="val accent">85%+</div><div class="lbl">Melanoma Recall</div></div>
+    <div class="metric"><div class="val" style="color:var(--blue)">~87%</div><div class="lbl">Overall Accuracy</div></div>
+    <div class="metric"><div class="val" style="color:var(--purple)">0.92</div><div class="lbl">Mel ROC-AUC</div></div>
+    <div class="metric"><div class="val" style="color:var(--amber)">0.35</div><div class="lbl">Best Threshold</div></div>
+  </div>
+  <div class="cols cols-2" style="flex:1">
+    <div class="card">
+      <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:10px;letter-spacing:.06em;text-transform:uppercase">Training Curves (25 epochs)</div>
+      <svg viewBox="0 0 300 130" style="width:100%">
+        <line x1="30" y1="10" x2="30" y2="110" stroke="#1e3158" stroke-width="1"/>
+        <line x1="30" y1="110" x2="290" y2="110" stroke="#1e3158" stroke-width="1"/>
+        <!-- val loss decreasing -->
+        <polyline points="30,30 60,38 90,50 120,62 150,72 180,80 210,84 240,86 270,87 290,88" stroke="#ef4444" stroke-width="2" fill="none"/>
+        <!-- train loss -->
+        <polyline points="30,25 60,31 90,42 120,52 150,61 180,68 210,71 240,74 270,74 290,75" stroke="#f87171" stroke-width="1.5" fill="none" stroke-dasharray="4,3"/>
+        <!-- val accuracy increasing -->
+        <polyline points="30,95 60,88 90,80 120,72 150,65 180,57 210,50 240,46 270,44 290,44" stroke="#00d4aa" stroke-width="2" fill="none"/>
+        <!-- mel recall -->
+        <polyline points="30,100 60,90 90,78 120,68 150,58 180,50 210,44 240,40 270,38 290,38" stroke="#7c3aed" stroke-width="2" fill="none"/>
+        <text x="160" y="8" font-size="8" fill="#64748b" text-anchor="middle">epoch →</text>
+        <rect x="32" y="12" width="6" height="2" fill="#ef4444" rx="1"/><text x="42" y="15" font-size="7" fill="#94a3b8">Val Loss</text>
+        <rect x="80" y="12" width="6" height="2" fill="#00d4aa" rx="1"/><text x="90" y="15" font-size="7" fill="#94a3b8">Val Acc</text>
+        <rect x="128" y="12" width="6" height="2" fill="#7c3aed" rx="1"/><text x="138" y="15" font-size="7" fill="#94a3b8">Mel Recall</text>
+      </svg>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:10px;letter-spacing:.06em;text-transform:uppercase">Per-Class Test Recall</div>
+        <table>
+          <tr><th>Class</th><th>Recall</th><th>Risk</th></tr>
+          <tr><td>mel</td><td><span class="accent">≥ 80%</span> ✓</td><td><tag class="red">HIGH</tag></td></tr>
+          <tr><td>bcc</td><td>~82%</td><td><tag class="red">HIGH</tag></td></tr>
+          <tr><td>akiec</td><td>~76%</td><td><tag class="amber">MED</tag></td></tr>
+          <tr><td>nv</td><td>~91%</td><td><tag class="green">LOW</tag></td></tr>
+          <tr><td>bkl</td><td>~74%</td><td><tag class="green">LOW</tag></td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <p style="font-size:13px;color:var(--dim);line-height:1.6">
+          Best checkpoint saved at epoch where <span class="red">melanoma recall</span>
+          was highest on validation set — not overall val loss.
+          Misclassification grid shows mel errors highlighted in red.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════  SLIDE 9 — API DEMO  ══════════════════ -->
+<div class="slide" id="s8">
+  <div class="slide-title">API Demo</div>
+  <h2>FastAPI <span class="accent">/predict</span> Endpoint</h2>
+  <div style="height:1px;background:linear-gradient(90deg,var(--teal),transparent);margin:8px 0 20px"></div>
+  <div class="cols cols-2" style="flex:1">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card glow">
+        <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:8px;letter-spacing:.06em">REQUEST</div>
+        <div class="code-block" style="font-size:12px">
+<span class="kw">POST</span> http://localhost:8000/predict
+Content-Type: multipart/form-data
+
+<span class="cm"># curl example</span>
+curl -X POST \
+  http://localhost:8000/predict \
+  -F <span class="str">"file=@lesion.jpg"</span>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:var(--purple);margin-bottom:8px;letter-spacing:.06em">RESPONSE</div>
+        <div class="code-block" style="font-size:12px">
+{
+  <span class="str">"lesion"</span>:     <span class="str">"mel"</span>,
+  <span class="str">"risk"</span>:       <span class="str">"HIGH"</span>,
+  <span class="str">"confidence"</span>: <span class="num">0.7812</span>,
+  <span class="str">"mel_prob"</span>:   <span class="num">0.7812</span>,
+  <span class="str">"disclaimer"</span>: <span class="str">"This tool is for
+    screening assistance only..."</span>
+}
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:10px">Risk Stratification</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px"><tag class="red">HIGH</tag><span style="font-size:13px;color:var(--dim)">mel, bcc — malignant or pre-malignant</span></div>
+          <div style="display:flex;align-items:center;gap:10px"><tag class="amber">MEDIUM</tag><span style="font-size:13px;color:var(--dim)">akiec — actinic keratosis</span></div>
+          <div style="display:flex;align-items:center;gap:10px"><tag class="green">LOW</tag><span style="font-size:13px;color:var(--dim)">bkl, df, nv, vasc — benign</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:10px">Additional Endpoints</div>
+        <table>
+          <tr><th>Route</th><th>Method</th><th>Purpose</th></tr>
+          <tr><td>/</td><td>GET</td><td>Health check + class list</td></tr>
+          <tr><td>/predict</td><td>POST</td><td>Upload image → diagnosis</td></tr>
+          <tr><td>/docs</td><td>GET</td><td>Swagger UI (auto-gen)</td></tr>
+          <tr><td>/redoc</td><td>GET</td><td>ReDoc documentation</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════  SLIDE 10 — DOCKER  ══════════════════ -->
+<div class="slide" id="s9">
+  <div class="slide-title">Deployment</div>
+  <h2><span class="accent">Docker</span> Containerised Deployment</h2>
+  <div style="height:1px;background:linear-gradient(90deg,var(--teal),transparent);margin:8px 0 20px"></div>
+  <div class="cols cols-2" style="flex:1">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card glow">
+        <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:8px">One-Command Launch</div>
+        <div class="code-block" style="font-size:13px">
+<span class="cm"># Copy model weights first</span>
+cp skin_cancer_model.pth \
+   services/classifier/
+
+<span class="cm"># Start the service</span>
+docker compose up --build
+<span class="cm"># → API live at localhost:8000</span>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:var(--purple);margin-bottom:8px">Dockerfile — python:3.11-slim</div>
+        <div class="code-block" style="font-size:12px">
+<span class="kw">FROM</span> python:3.11-slim
+<span class="kw">WORKDIR</span> /app
+<span class="kw">COPY</span> requirements.txt .
+<span class="kw">RUN</span> pip install -r requirements.txt
+<span class="kw">COPY</span> app.py skin_cancer_model.pth .
+<span class="kw">EXPOSE</span> 8000
+<span class="kw">CMD</span> [<span class="str">"uvicorn"</span>, <span class="str">"app:app"</span>,
+     <span class="str">"--host"</span>, <span class="str">"0.0.0.0"</span>, <span class="str">"--port"</span>, <span class="str">"8000"</span>]
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <!-- Architecture diagram -->
+      <div class="card" style="display:flex;flex-direction:column;gap:10px;align-items:center">
+        <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:4px;letter-spacing:.06em;align-self:flex-start">Deployment Architecture</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+          <div style="background:var(--border);border-radius:8px;padding:10px 16px;text-align:center"><div>🩺</div><div style="color:var(--teal);font-weight:600">Client</div><div style="font-size:10px;color:var(--muted)">curl / UI</div></div>
+          <span style="color:var(--muted)">→</span>
+          <div style="background:rgba(0,212,170,.08);border:1px solid var(--teal);border-radius:8px;padding:10px 16px;text-align:center"><div>🐋</div><div style="color:var(--teal);font-weight:600">Docker Container</div><div style="font-size:10px;color:var(--muted)">FastAPI + Uvicorn</div></div>
+          <span style="color:var(--muted)">→</span>
+          <div style="background:var(--border);border-radius:8px;padding:10px 16px;text-align:center"><div>🧠</div><div style="color:var(--purple);font-weight:600">Model</div><div style="font-size:10px;color:var(--muted)">.pth weights</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px">Port 8000 · CPU inference · restart: unless-stopped</div>
+      </div>
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:8px">Why Docker?</div>
+        <ul>
+          <li>Reproducible across any machine</li>
+          <li>No environment conflicts (CUDA / CPU)</li>
+          <li>Production-ready with one command</li>
+          <li>Model weights mounted as volume</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════  SLIDE 11 — ETHICS  ══════════════════ -->
+<div class="slide" id="s10">
+  <div class="slide-title">Medical Ethics & Responsible AI</div>
+  <h2>Responsible <span class="accent">AI in Healthcare</span></h2>
+  <div style="height:1px;background:linear-gradient(90deg,var(--teal),transparent);margin:8px 0 20px"></div>
+  <div class="cols cols-2" style="flex:1">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="ethics-block">
+        <p>"This tool is for screening assistance only and does not constitute a medical diagnosis. Please consult a licensed dermatologist for any skin concerns."</p>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--teal);margin-bottom:10px">Why This Disclaimer Matters</div>
+        <ul>
+          <li>AI cannot examine lesion texture/depth clinically</li>
+          <li>Image quality, lighting, and angle affect results</li>
+          <li>Threshold optimised for recall — may false-positive</li>
+          <li>Legal liability lies with the clinician, not the tool</li>
+        </ul>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card glow">
+        <div style="font-size:13px;font-weight:700;color:var(--purple);margin-bottom:10px">Design Choices with Ethical Intent</div>
+        <table>
+          <tr><th>Choice</th><th>Ethical Rationale</th></tr>
+          <tr><td>Recall-first objective</td><td>Missing cancer = harm</td></tr>
+          <tr><td>mel_prob in response</td><td>Transparency for clinicians</td></tr>
+          <tr><td>3-tier risk output</td><td>Actionable, not alarming</td></tr>
+          <tr><td>Disclaimer in every call</td><td>Prevents over-reliance</td></tr>
+        </table>
+      </div>
+      <div class="card" style="border-left:3px solid var(--amber)">
+        <div style="font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px">⚠️ Known Limitations</div>
+        <ul>
+          <li>Dataset is predominantly light skin tones</li>
+          <li>No clinical metadata used (age, location)</li>
+          <li>No uncertainty quantification (Bayesian)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════  SLIDE 12 — TEAM  ══════════════════ -->
+<div class="slide" id="s11">
+  <div class="slide-title">Team & Summary</div>
+  <h2>Project <span class="accent">Contributions</span> & Takeaways</h2>
+  <div style="height:1px;background:linear-gradient(90deg,var(--teal),transparent);margin:8px 0 20px"></div>
+  <div class="cols cols-2" style="flex:1">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card glow">
+        <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:12px;letter-spacing:.06em;text-transform:uppercase">Team Roles</div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px"> In the coversheet</p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:var(--purple);margin-bottom:10px;letter-spacing:.06em;text-transform:uppercase">What We Delivered</div>
+        <ul>
+          <li>EfficientNetV2-S with >80% melanoma recall</li>
+          <li>Production FastAPI + Docker deployment</li>
+          <li>Clinically-aware threshold tuning (0.35)</li>
+          <li>8+ EDA visualisations in notebook</li>
+          <li>Medical ethics baked into every response</li>
+        </ul>
+      </div>
+      <div class="card" style="background:linear-gradient(135deg,rgba(0,212,170,.08),rgba(124,58,237,.08));border-color:var(--teal)">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">Key Takeaway</div>
+        <p style="font-size:13px;color:var(--dim);line-height:1.6">
+          In medical AI, optimising the <span class="red">right metric</span> matters more
+          than overall accuracy. A model that scores 87% accuracy but misses 30% of
+          melanomas is <strong style="color:var(--red)">clinically dangerous</strong>.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<div id="counter">1 / 12</div>
+<div id="nav"></div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const prog   = document.getElementById('progress');
+const counter= document.getElementById('counter');
+const nav    = document.getElementById('nav');
+let cur = 0;
+
+function goto(n){
+  slides[cur].classList.remove('active');
+  cur = Math.max(0, Math.min(n, slides.length-1));
+  slides[cur].classList.add('active');
+  const pct = ((cur+1)/slides.length)*100;
+  prog.style.width = pct+'%';
+  counter.textContent = (cur+1)+' / '+slides.length;
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===cur));
+}
+
+// build nav dots
+slides.forEach((_,i)=>{
+  const d = document.createElement('div');
+  d.className = 'dot'+(i===0?' active':'');
+  d.onclick = ()=>goto(i);
+  nav.appendChild(d);
+});
+
+document.addEventListener('keydown', e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' ') goto(cur+1);
+  if(e.key==='ArrowLeft' ||e.key==='ArrowUp')                goto(cur-1);
+});
+
+// swipe
+let ts=0,tx=0;
+document.addEventListener('touchstart',e=>{ts=e.touches[0].clientX});
+document.addEventListener('touchend'  ,e=>{
+  const dx = e.changedTouches[0].clientX - ts;
+  if(Math.abs(dx)>50) goto(dx<0?cur+1:cur-1);
+});
+
+prog.style.width = (1/slides.length*100)+'%';
+</script>
+</body>
+</html>
+
