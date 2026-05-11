@@ -120,7 +120,7 @@ SkinCancerDetector/
 │
 ├── 📂 src/                          # Core ML source code
 │   ├── __init__.py
-│   ├── config.py                    # ⚙️ All constants, single source of truth
+│   ├── config.py                    #  All constants, single source of truth
 │   │
 │   ├── 📂 data/
 │   │   ├── __init__.py
@@ -132,17 +132,17 @@ SkinCancerDetector/
 │   │
 │   └── 📂 training/
 │       ├── __init__.py
-│       ├── train.py                 # 🏋️ Full training pipeline
-│       ├── evaluate.py              # 📊 Evaluation, ROC, confusion matrix
-│       └── training_report.md       # 📄 Detailed training report
+│       ├── train.py                 #  Full training pipeline
+│       ├── evaluate.py              #  Evaluation, ROC, confusion matrix
+│       └── training_report.md       #  Detailed training report
 │
-├── 📂 services/                     # 🐳 Microservices (Dockerized)
+├── 📂 services/                     #  Microservices (Dockerized)
 │   │
 │   ├── 📂 classifier/               # ML Inference Service (Port 8001)
 │   │   ├── app.py                   # FastAPI inference endpoint
 │   │   ├── Dockerfile
 │   │   ├── requirements.txt
-│   │   └── skin_cancer_model.pth    # 🧠 Trained model weights
+│   │   └── skin_cancer_model.pth    #  Trained model weights
 │   │
 │   └── 📂 api/                      # Orchestration Service (Port 8000)
 │       ├── app.py                   # Main API gateway
@@ -154,12 +154,12 @@ SkinCancerDetector/
 │       │   └── index.html           # Web UI
 │       └── 📂 logs/                 # Application logs
 │
-├── 📂 notebooks/                    # 📓 Jupyter Notebooks
+├── 📂 notebooks/                    #  Jupyter Notebooks
 │   ├── Data loaded & EDA & Transformations.ipynb
 │   ├── Training.ipynb
 │   └── Evaluation.ipynb
 │
-├── 📂 Demo/                         # 🎬 Demo & UI Screenshots
+├── 📂 Demo/                         #  Demo & UI Screenshots
 │   ├── docker-running.png
 │   ├── live-demo.mkv
 │   ├── presentation.html
@@ -168,10 +168,10 @@ SkinCancerDetector/
 │   ├── ui-melanoma.png
 │   └── ui-nevi.png
 │
-├── 📂 test/                         # 🧪 API Tests
+├── 📂 test/                         #  API Tests
 │   └── test_api.py
 │
-├── 📂 testing data/                 # 🖼️ Sample images for API testing
+├── 📂 testing data/                 #  Sample images for API testing
 │   ├── akiec - Actinic Keratoses and Intraepithelial Carcinoma/
 │   ├── bcc - Basal Cell Carcinoma/
 │   ├── bkl - Benign Keratosis-like Lesions/
@@ -185,7 +185,7 @@ SkinCancerDetector/
 ├── 📄 docker-compose.yml            # Multi-service orchestration
 ├── 📄 .env                          # Environment variables
 ├── 📄 .gitignore
-└── 📄 README.md                     # 📖 This file
+└── 📄 README.md                     #  This file
 ```
 
 ---
