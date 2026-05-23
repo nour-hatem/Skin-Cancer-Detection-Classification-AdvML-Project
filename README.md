@@ -341,25 +341,12 @@ python -m src.training.evaluate --data /path/to/ham10000 --model skin_cancer_mod
 - **Age distribution by class** — melanoma skews older (50-70), dermatofibroma skews younger
 - **Sex distribution** — basal cell carcinoma is more prevalent in males
 - **Lesion localization** — melanoma appears most frequently on the back
-- **Diagnosis confirmation method** — only 24% of melanoma cases confirmed by histopathology
+- **Diagnosis confirmation method** — only 24% of melanoma cases are confirmed by histopathology
 - **Melanoma vs Nevi comparison grid** — visualizes why this pair dominates misclassification errors
 - **Augmentation before/after** — confirmed augmentation pipeline produces realistic variation without distorting lesion morphology
 
 ---
 
-## Team
-
-| Member | Role | Responsibilities |
-|---|---|---|
-| Yassin Yasser | Data Manager & Evaluator | Dataset download, deduplication, stratified split, class balance analysis, confusion matrix, ROC-AUC, threshold tuning, misclassification analysis |
-| Ahmad Alaa | EDA & Visualizer, Model Trainer | 8 visualizations with written insights, EfficientNetV2-S transfer learning, two-phase LR, OneCycleLR, training loop |
-| Mahmoud Hossam | Model Trainer | EfficientNetV2-S architecture, loss function design, augmentation pipeline, WeightedRandomSampler |
-| Nour Hatem | API Developer | FastAPI /predict with risk level, disclaimer, clinical enrichment, microservice architecture |
-| Youssef | API Developer | FastAPI service integration, Pydantic schemas, endpoint testing, Swagger documentation |
-| Omar Ashraf | Deployer | Docker microservices, docker-compose orchestration, integration tests, live demo |
-
----
-
 ## Medical Disclaimer
 
-This tool is for screening assistance only and does not constitute a medical diagnosis. All predictions must be reviewed by a licensed dermatologist before any clinical decision is made. The model was trained on a research dataset and has not been validated for clinical use.
+This tool is for screening assistance only and does not constitute a medical diagnosis. A licensed dermatologist must review all predictions before any clinical decision is made. The model was trained on a research dataset and has not been validated for clinical use.
